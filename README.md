@@ -136,7 +136,21 @@ make                     # 产出 out/klipper.bin
 安装器同时会装交叉编译器（`gcc-arm-none-eabi`、`gcc-avr` 等），
 否则会报 `arm-none-eabi-gcc: No such file or directory`。
 
-> 实机验证：STM32F446 与 STM32H723 均能正常产出约 44.5KB 的 `klipper.bin`。
+> **实机验证**（全志 H618 / arm64 Debian 12，四种架构全部一次通过）：
+>
+> | 目标 | 产物 | 大小 |
+> |---|---|---|
+> | STM32F446（Fly-D8 类） | `klipper.bin` | 44.5 KB |
+> | STM32H723 | `klipper.bin` | — |
+> | RP2040 | `klipper.uf2` | 87 KB |
+> | AVR ATmega2560（老 Melzi 板） | `klipper.elf.hex` | — |
+>
+> 注意**产物后缀随架构不同**：STM32 出 `.bin`，RP2040 出 `.uf2`，AVR 出 `.elf.hex` ——
+> 写自动化脚本时别一律找 `klipper.bin`。
+>
+> 另外 RP2040 的 kconfig 选项名在不同 Klipper 版本里有差别：这一版架构选项是
+> `MACH_RPXXXX`（同时覆盖 RP2040 / RP235x），芯片再选 `MACH_RP2040`。
+> 用 `make menuconfig` 点选最省事，手写 `.config` 时留意。
 
 **为什么是 `.tar.xz` 而不是 `.tar.gz`**：带完整 SDK 的包用 gzip 压出来约 106MB，
 超过 Gitee 100MB 的附件上限；换成 xz 后是 83MB，体积小、功能完整。
