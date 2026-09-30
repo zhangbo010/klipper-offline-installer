@@ -116,6 +116,23 @@ sudo ./install.sh              # 离线优先，缺包时自动回落到国内�
 
 ---
 
+## 关于发行包里的源码取舍
+
+发行包**不含** `klipper/lib/`（STM32 / RP2040 等 MCU 的编译 SDK，未压缩约 205MB）
+和上游文档目录 —— 主机端部署（包括默认安装的 Linux host MCU）完全用不到它们，
+去掉后包体积从 106MB 降到 78MB，也刚好避开 Gitee 100MB 的附件上限。
+
+如果你还要在设备上**编译真实打印主板的固件**（`make menuconfig` → `make`），
+用仓库里的脚本补回完整源码即可：
+
+```bash
+./tools/fetch-sources.sh      # 重新获取完整源码（含 lib/）
+./build-package.sh 1.0.1      # 重新打包
+```
+
+已经装在设备上的话，直接在那台机器上 `git clone` 一份 Klipper 编译也行
+（只需要 `lib/` 和 `src/`，编出的固件烧录到主板即可）。
+
 ## 许可
 
 本仓库的脚本与模板：MIT，见 [LICENSE](LICENSE)。

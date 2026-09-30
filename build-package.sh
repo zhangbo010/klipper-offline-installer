@@ -47,6 +47,7 @@ mkdir -p "$ROOT/payload/src"
 for d in klipper moonraker KlipperScreen mainsail mainsail-config; do
   rsync -a --exclude='.git' --exclude='__pycache__' --exclude='*.pyc' --exclude='.cache' \
         --exclude='klippy/chelper/*.so' --exclude='out/' \
+        --exclude='lib/' --exclude='docs/' \
         "payload/src/$d" "$ROOT/payload/src/"
   printf "  %-16s %s\n" "$d" "$(du -sh "$ROOT/payload/src/$d" | cut -f1)"
 done
