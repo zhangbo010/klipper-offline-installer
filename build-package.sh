@@ -100,8 +100,10 @@ mkdir -p "$ROOT/wheels"
 if compgen -G "wheels/*" >/dev/null; then
   cp -a wheels/. "$ROOT/wheels/"
   for w in "$ROOT"/wheels/*/; do
-    [[ -d "$w" ]] && printf "  %-18s %s 个包 %s\n" "$(basename "$w")" \
-      "$(ls -1 "$w" | wc -l | tr -d ' ')" "$(du -sh "$w" | cut -f1)"
+    if [[ -d "$w" ]]; then   # set -e 下别写 [[ ]] && cmd
+      printf "  %-18s %s 个包 %s\n" "$(basename "$w")" \
+        "$(ls -1 "$w" | wc -l | tr -d ' ')" "$(du -sh "$w" | cut -f1)"
+    fi
   done
 else
   warn "wheels/ 为空 —— 打出来的包在目标机上需要联网安装 Python 依赖"
