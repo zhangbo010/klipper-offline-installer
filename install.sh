@@ -125,7 +125,7 @@ stage_wheels() {
   chmod 755 "$STAGE_DIR"
   WHEEL_DIRS=("$STAGE_DIR")
   FIND_LINKS_ARG="--find-links=$STAGE_DIR"
-  log "离线依赖已暂存到 $STAGE_DIR（普通用户可读，共 $(ls -1 "$STAGE_DIR" | wc -l | tr -d ' ') 个包）"
+  log "离线依赖已暂存到 ${STAGE_DIR}（普通用户可读，共 $(ls -1 "$STAGE_DIR" | wc -l | tr -d ' ') 个包）"
 }
 cleanup_stage() { [[ -n "${STAGE_DIR:-}" && -d "${STAGE_DIR:-}" ]] && rm -rf "$STAGE_DIR" || true; }
 
@@ -174,7 +174,7 @@ setup_user() {
   for g in sudo dialout tty video render input plugdev netdev moonraker-admin; do
     getent group "$g" >/dev/null && usermod -aG "$g" "$KS_USER" || true
   done
-  ok "用户 $KS_USER 就绪（密码 $KS_PASS，已加入 sudo/tty/video/render/input/moonraker-admin 等组）"
+  ok "用户 $KS_USER 就绪（密码 ${KS_PASS}，已加入 sudo/tty/video/render/input/moonraker-admin 等组）"
 }
 
 HOME_DIR() { getent passwd "$KS_USER" | cut -d: -f6; }
@@ -185,7 +185,7 @@ deploy_sources() {
   log "部署源码到 $H/"
   mkdir -p "$H"
   for d in klipper moonraker KlipperScreen mainsail mainsail-config; do
-    [[ -d "$PAYLOAD/src/$d" ]] || { warn "payload 缺少 $d，跳过"; continue; }
+    [[ -d "$PAYLOAD/src/$d" ]] || { warn "payload 缺少 ${d}，跳过"; continue; }
     rm -rf "${H:?}/$d.tmp"
     cp -a "$PAYLOAD/src/$d" "$H/$d.tmp"
     rm -rf "${H:?}/$d"
@@ -225,7 +225,7 @@ make_venv() {   # $1=venv路径  $2=requirements文件
     || warn "  pip/setuptools 升级跳过（沿用 venv 自带版本）"
 
   if [[ ! -f "$REQ" ]]; then
-    warn "  没有 requirements 文件（$REQ），跳过"
+    warn "  没有 requirements 文件（${REQ}），跳过"
     return 0
   fi
 
@@ -235,11 +235,11 @@ make_venv() {   # $1=venv路径  $2=requirements文件
 
   if [[ $rc -ne 0 ]]; then
     if [[ $OFFLINE -eq 1 ]]; then
-      die "离线安装依赖失败（$REQ）—— 缺少对应 wheel/sdist，请用 tools/collect-wheels.sh 在本平台补全"
+      die "离线安装依赖失败（${REQ}）—— 缺少对应 wheel/sdist，请用 tools/collect-wheels.sh 在本平台补全"
     fi
     warn "  离线依赖不完整，回退联网安装…"
     run_pip install -q -r "$REQ" -i "$PIP_INDEX" --trusted-host "$PIP_HOST" \
-      || die "联网安装依赖仍失败（$REQ）"
+      || die "联网安装依赖仍失败（${REQ}）"
   fi
   ok "  $VENV 完成"
 }
@@ -474,7 +474,7 @@ do_uninstall() {
   rm -f /etc/nginx/sites-enabled/mainsail /etc/nginx/sites-available/mainsail
   rm -f /usr/local/bin/klipper_mcu /usr/local/bin/net-watchdog.sh
   local H; H="$(HOME_DIR 2>/dev/null || echo /home/$KS_USER)"
-  warn "用户数据保留在 $H（源码/配置/日志），需要清空请手动 rm -rf $H"
+  warn "用户数据保留在 ${H}（源码/配置/日志），需要清空请手动 rm -rf $H"
   ok "服务与系统集成已卸载"
   exit 0
 }
