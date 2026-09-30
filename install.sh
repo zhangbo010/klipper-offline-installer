@@ -139,6 +139,9 @@ apt_install() {
     nginx xinput x11-xserver-utils fonts-wqy-zenhei
     libmpv-dev librsvg2-common libdbus-glib-1-dev autoconf pkg-config
     fonts-nanum fonts-ipafont mpv git gcc make
+    # 交叉编译器：编译真实打印主板固件用（STM32 / RP2040 用 arm-none-eabi；
+    # AVR 老主板用 avr）。不装的话 MCU 固件编译会报 arm-none-eabi-gcc: not found
+    gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi gcc-avr avr-libc
   )
   # 树莓派系需要 xserver-xorg-legacy 才能让非 console 用户起 X
   local EXTRA=()
@@ -382,7 +385,9 @@ build_host_mcu() {
     install -m 755 "$H/klipper/out/klipper.elf" /usr/local/bin/klipper_mcu
     ok "  klipper_mcu 已安装（/usr/local/bin/klipper_mcu）"
   else
-    warn "  Linux MCU 编译失败，跳过（接了真实主板时不需要它）"
+    warn "  Linux MCU 编译失败（跳过；接了真实主板时不需要它）"
+    warn "  常见原因：包内精简掉了 klipper/lib，或缺少 gcc。"
+    warn "  补全源码：./tools/fetch-sources.sh 后重新打包，或在设备上 git clone klipper"
     WITH_HOST_MCU=0
   fi
   cd - >/dev/null

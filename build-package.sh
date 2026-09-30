@@ -47,10 +47,45 @@ mkdir -p "$ROOT/payload/src"
 for d in klipper moonraker KlipperScreen mainsail mainsail-config; do
   rsync -a --exclude='.git' --exclude='__pycache__' --exclude='*.pyc' --exclude='.cache' \
         --exclude='klippy/chelper/*.so' --exclude='out/' \
-        --exclude='lib/' --exclude='docs/' \
+        \
         "payload/src/$d" "$ROOT/payload/src/"
   printf "  %-16s %s\n" "$d" "$(du -sh "$ROOT/payload/src/$d" | cut -f1)"
 done
+
+# 先做一份 MCU SDK 补充包（含完整 lib），供编译真实打印主板固件用
+if [[ -d "payload/src/klipper/lib" ]]; then
+  say "生成 MCU SDK 补充包（编译真实打印主板固件用）"
+  SDK_NAME="$PKG-mcu-libs"
+  rm -rf "$BUILD/$SDK_NAME"; mkdir -p "$BUILD/$SDK_NAME/klipper"
+  rsync -a payload/src/klipper/lib "$BUILD/$SDK_NAME/klipper/"
+  cat > "$BUILD/$SDK_NAME/README.txt" <<'SDKEOF'
+MCU 编译 SDK 补充包
+===================
+
+用途：把各厂商 MCU 的 SDK 补回 Klipper 源码树，用于编译**真实打印主板**的固件
+（STM32 / RP2040 / SAM 等）。主机端部署（含默认安装的 Linux host MCU）不需要它。
+
+用法：
+  tar xzf klipper-stack-<版本>-mcu-libs.tar.gz
+  cp -a klipper-stack-<版本>-mcu-libs/klipper/lib/. ~/klipper/lib/
+
+之后即可编译固件：
+  cd ~/klipper && make menuconfig && make
+
+SDKEOF
+  tar czf "$DIST/$SDK_NAME.tar.gz" -C "$BUILD" "$SDK_NAME"
+  rm -rf "$BUILD/$SDK_NAME"
+  ls -lh "$DIST/$SDK_NAME.tar.gz" | awk '{print "  SDK 包:  "$9"   "$5}'
+fi
+
+# klipper/lib 里只有 kconfiglib 是构建系统需要的（Klipper 的 make 依赖它），
+# 其余是各厂商 MCU 的编译 SDK（stm32*/pico-sdk/sam* 等，约 200MB），
+# 主机端部署用不到 —— 删掉可让发行包从 106MB 降到 ~78MB。
+if [[ -d "$ROOT/payload/src/klipper/lib" ]]; then
+  find "$ROOT/payload/src/klipper/lib" -mindepth 1 -maxdepth 1 ! -name 'kconfiglib' \
+       -exec rm -rf {} + 2>/dev/null || true
+  printf "  %-16s %s (仅保留 kconfiglib)\n" " klipper/lib" "$(du -sh "$ROOT/payload/src/klipper/lib" | cut -f1)"
+fi
 
 # ---------------------------------------------------------------- 模板
 say "复制配置与服务模板"
@@ -97,7 +132,7 @@ cat > "$ROOT/README.md" <<'EOF'
 
 ## 快速开始
 ```bash
-tar xzf klipper-stack-*.tar.gz
+tar xf klipper-stack-*.tar.xz
 cd klipper-stack-*
 sudo ./install.sh                    # 离线优先，缺包可联网兜底
 ```

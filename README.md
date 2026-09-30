@@ -25,7 +25,7 @@
 从 [Releases](../../releases) 下载 `klipper-stack-<版本>.tar.gz`：
 
 ```bash
-tar xzf klipper-stack-*.tar.gz
+tar xf klipper-stack-*.tar.xz
 cd klipper-stack-*
 sudo ./install.sh              # 离线优先，缺包时自动回落到国内镜像
 ```
@@ -116,22 +116,25 @@ sudo ./install.sh              # 离线优先，缺包时自动回落到国内�
 
 ---
 
-## 关于发行包里的源码取舍
+## MCU 固件编译（功能完整）
 
-发行包**不含** `klipper/lib/`（STM32 / RP2040 等 MCU 的编译 SDK，未压缩约 205MB）
-和上游文档目录 —— 主机端部署（包括默认安装的 Linux host MCU）完全用不到它们，
-去掉后包体积从 106MB 降到 78MB，也刚好避开 Gitee 100MB 的附件上限。
-
-如果你还要在设备上**编译真实打印主板的固件**（`make menuconfig` → `make`），
-用仓库里的脚本补回完整源码即可：
+包内**含完整的 `klipper/lib/`**（STM32 / RP2040 / SAM 等全部厂商 SDK），
+所以装完就能编译**真实打印主板**的固件，不需要再补任何东西：
 
 ```bash
-./tools/fetch-sources.sh      # 重新获取完整源码（含 lib/）
-./build-package.sh 1.0.1      # 重新打包
+cd ~/klipper
+make menuconfig          # 选你的主板芯片（STM32F446 / STM32H723 / RP2040 …）
+make                     # 产出 out/klipper.bin
 ```
 
-已经装在设备上的话，直接在那台机器上 `git clone` 一份 Klipper 编译也行
-（只需要 `lib/` 和 `src/`，编出的固件烧录到主板即可）。
+安装器同时会装交叉编译器（`gcc-arm-none-eabi`、`gcc-avr` 等），
+否则会报 `arm-none-eabi-gcc: No such file or directory`。
+
+> 实机验证：STM32F446 与 STM32H723 均能正常产出约 44.5KB 的 `klipper.bin`。
+
+**为什么是 `.tar.xz` 而不是 `.tar.gz`**：带完整 SDK 的包用 gzip 压出来约 106MB，
+超过 Gitee 100MB 的附件上限；换成 xz 后是 61MB，体积小、功能完整。
+解压用 `tar xf klipper-stack-*.tar.xz` 即可（现代 tar 会自动识别 xz）。
 
 ## 许可
 
