@@ -1,0 +1,7 @@
+// /etc/polkit-1/rules.d/99-moonraker.rules  (Debian 12 / polkit 122)
+// 让 klipper 用户（Moonraker / KlipperScreen）能管理服务与电源动作
+polkit.addRule(function(action, subject) {
+    if (subject.user == "klipper") {
+        return polkit.Result.YES;
+    }
+});

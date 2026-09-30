@@ -1,0 +1,13 @@
+[Unit]
+Description=Klipper Linux Host MCU (virtual printer, no MCU board needed)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/klipper_mcu -r -I /tmp/klipper_host_mcu
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

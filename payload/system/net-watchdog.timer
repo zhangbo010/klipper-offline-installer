@@ -1,0 +1,10 @@
+[Unit]
+Description=Run network watchdog every 2 minutes
+
+[Timer]
+OnBootSec=90
+OnUnitActiveSec=120
+AccuracySec=15s
+
+[Install]
+WantedBy=timers.target

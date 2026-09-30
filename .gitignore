@@ -1,0 +1,18 @@
+# 第三方源码（用 tools/fetch-sources.sh 获取，不入库）
+payload/src/
+
+# 离线依赖（用 tools/collect-wheels.sh 在目标平台收集，体积大不入库）
+wheels/
+
+# 构建产物
+build/
+dist/
+*.tar.gz
+*.tar.gz.sha256
+
+# 杂项
+__pycache__/
+*.pyc
+.DS_Store
+.idea/
+.vscode/

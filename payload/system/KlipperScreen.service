@@ -1,0 +1,16 @@
+[Unit]
+Description=KlipperScreen
+After=network-online.target moonraker.service
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=klipper
+Environment=DISPLAY=:0
+ExecStart=/usr/bin/xinit /home/klipper/.KlipperScreen-env/bin/python /home/klipper/KlipperScreen/screen.py -- :0 -nocursor
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

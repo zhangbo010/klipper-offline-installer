@@ -1,0 +1,7 @@
+[Unit]
+Description=Network watchdog (reconnect WiFi if gateway unreachable)
+After=NetworkManager.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/net-watchdog.sh
