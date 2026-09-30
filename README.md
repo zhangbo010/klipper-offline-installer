@@ -22,7 +22,7 @@
 
 ### 方式 A：直接用发行包（推荐）
 
-从 [Releases](../../releases) 下载 `klipper-stack-<版本>.tar.gz`：
+从 [Releases](../../releases) 下载 `klipper-stack-<版本>.tar.xz`：
 
 ```bash
 tar xf klipper-stack-*.tar.xz
@@ -37,7 +37,7 @@ sudo ./install.sh              # 离线优先，缺包时自动回落到国内�
 ```bash
 ./tools/fetch-sources.sh       # ① 拉源码到 payload/src/（优先 Gitee 镜像）
 ./tools/collect-wheels.sh      # ② 在**目标平台**上收集离线依赖到 wheels/
-./build-package.sh 1.0.0       # ③ 打包 → dist/klipper-stack-1.0.0.tar.gz
+./build-package.sh 1.0.3       # ③ 打包 → dist/klipper-stack-1.0.3.tar.xz
 ```
 
 第 ② 步必须在**与目标机相同架构 + 相同 Python 版本**的机器上执行，
@@ -109,8 +109,14 @@ sudo ./install.sh              # 离线优先，缺包时自动回落到国内�
 - 预编译 PyGObject 报 `girepository-2.0 is required`（版本约束没带上的后果）
 - `pip` 报 `from versions: none`（wheelhouse 放在 `/root` 下，普通用户读不到）
 - KlipperScreen 报 `Only console users are allowed to run the X server`
+- **触摸屏完全无响应**：Xorg 日志里有 `config/udev: Adding input device <触摸设备>`，
+  但 `xinput list` 里看不到它 → 缺 `xserver-xorg-input-libinput` /
+  `xserver-xorg-input-evdev`，X 无法接管触摸设备。内核侧其实是好的
+  （`/dev/input/event*` 存在），所以这种症状很容易误判成"开发板不兼容这块屏"。
+  安装器已包含这两个驱动包
 
-系统库（apt 那 20 多个包）**没有**打进包里 —— 体积翻几倍且跨发行版容易冲突；
+系统库（apt 那些包，含 X 服务器 + 触摸屏输入驱动 + MCU 交叉编译器）**没有**打进包里
+—— 体积翻几倍且跨发行版容易冲突；
 安装器会自动用 apt 装（国内源几秒）。需要彻底断网环境时按 `docs/pitfalls.md`
 最后一节把 `.deb` 也离线化。
 
@@ -133,7 +139,7 @@ make                     # 产出 out/klipper.bin
 > 实机验证：STM32F446 与 STM32H723 均能正常产出约 44.5KB 的 `klipper.bin`。
 
 **为什么是 `.tar.xz` 而不是 `.tar.gz`**：带完整 SDK 的包用 gzip 压出来约 106MB，
-超过 Gitee 100MB 的附件上限；换成 xz 后是 61MB，体积小、功能完整。
+超过 Gitee 100MB 的附件上限；换成 xz 后是 83MB，体积小、功能完整。
 解压用 `tar xf klipper-stack-*.tar.xz` 即可（现代 tar 会自动识别 xz）。
 
 ## 许可

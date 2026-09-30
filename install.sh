@@ -142,6 +142,11 @@ apt_install() {
     # 交叉编译器：编译真实打印主板固件用（STM32 / RP2040 用 arm-none-eabi；
     # AVR 老主板用 avr）。不装的话 MCU 固件编译会报 arm-none-eabi-gcc: not found
     gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi gcc-avr avr-libc
+    # X 服务器与输入驱动：KlipperScreen 的 ExecStart 是 /usr/bin/xinit，
+    # 必须有 xinit + xserver-xorg-core 才能起图形界面；libinput/evdev 是
+    # 触摸屏能被 X 接管的必要条件 —— 缺这两个驱动时，X 只在日志里"发现"了
+    # 触摸设备却不会接管它，xinput 里看不到设备，触摸完全无响应。
+    xserver-xorg-core xinit xserver-xorg-input-libinput xserver-xorg-input-evdev
   )
   # 树莓派系需要 xserver-xorg-legacy 才能让非 console 用户起 X
   local EXTRA=()

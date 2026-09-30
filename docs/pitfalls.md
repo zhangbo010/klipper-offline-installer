@@ -163,6 +163,70 @@ ls klipper-stack-1.0.0/wheels/py311-aarch64 | grep -i '^setuptools'   # 确认�
 
 ---
 
+## 10. 触摸屏完全无响应（X 里根本看不到设备）
+
+**现象**：KlipperScreen 界面正常显示，但摸屏幕毫无反应。
+
+先看内核侧 —— **全都是正常的**，这一步最容易把人带到错误方向：
+
+```bash
+$ lsusb
+Bus 004 Device 004: ID 1a86:e5e3 QinHeng Electronics USB2IIC_CTP_CONTROL   # 触摸控制器在
+
+$ cat /proc/bus/input/devices     # 设备已注册，带 ABS_X / ABS_Y 绝对坐标轴
+N: Name="wch.cn USB2IIC_CTP_CONTROL"
+H: Handlers=mouse0 event0
+
+$ ls /dev/input/
+event0  mouse0 ...
+```
+
+Xorg 也"发现"了它，但 `xinput` 里就是没有：
+
+```bash
+$ grep -i "Adding input" /var/log/Xorg.0.log
+(II) config/udev: Adding input device wch.cn USB2IIC_CTP_CONTROL (/dev/input/event0)
+
+$ DISPLAY=:0 xinput list
+⎡ Virtual core pointer                    id=2
+⎜   ↳ Virtual core XTEST pointer          id=4     ← 只有虚拟设备，触摸设备不在列表里
+⎣ Virtual core keyboard                   id=3
+```
+
+**根因**：X 的输入驱动没装。X 靠 udev 发现设备，但真正**接管**设备需要输入驱动模块；
+缺驱动时 X 只在日志里记一句 `Adding input device`，然后就不管了。
+
+确认方法 —— 输入驱动目录里只有测试驱动：
+
+```bash
+$ ls /usr/lib/xorg/modules/input/
+inputtest_drv.so                    ← 只有一个测试驱动
+$ dpkg -l | grep xserver-xorg-input  # 空
+```
+
+**修复**：
+
+```bash
+apt-get install -y xserver-xorg-input-libinput xserver-xorg-input-evdev
+systemctl restart KlipperScreen     # 连带重启 X
+```
+
+装好后日志会多出关键三行，设备被当作触摸屏接管：
+
+```
+(II) wch.cn USB2IIC_CTP_CONTROL: is tagged by udev as: Touchscreen
+(II) wch.cn USB2IIC_CTP_CONTROL: device is a touch device
+(II) XINPUT: Adding extended input device "wch.cn USB2IIC_CTP_CONTROL" (type: TOUCHSCREEN, id 6)
+```
+
+**为什么这个坑特别坑人**：内核侧明明一切正常（设备在、坐标轴在），Windows 上同一块屏也能用，
+于是很容易下结论"这块开发板不兼容这屏"。实际只差两个 apt 包。
+
+顺带一提，如果目标机连 X 都没装，KlipperScreen 也起不来 ——
+`xserver-xorg-core` 和 `xinit`（服务的 ExecStart 就是 `/usr/bin/xinit`）同样必须在依赖里。
+
+---
+
 ## 附：想把系统库（apt）也完全离线化
 
 包里默认不含 `.deb`（体积翻几倍，且跨发行版容易依赖冲突）。需要彻底断网时：
